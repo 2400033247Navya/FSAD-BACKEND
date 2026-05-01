@@ -1,26 +1,45 @@
 package com.klu.safehaven.controller;
 
-import com.klu.safehaven.service.OtpService;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.stereotype.Service;
 
-@RestController
-@RequestMapping("/api/otp")
-@CrossOrigin("*")
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+
+@Service
 public class OtpController {
 
-    private final OtpService otpService;
+    @Autowired
+    private JavaMailSender mailSender;
 
-    public OtpController(OtpService otpService) {
-        this.otpService = otpService;
+    private Map<String, String> otpStorage = new HashMap<>();
+
+    public String sendOtp(String email) {
+        String otp = String.valueOf(new Random().nextInt(900000) + 100000);
+
+        otpStorage.put(email, otp);
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject("SafeHaven OTP Verification");
+        message.setText("Your OTP is: " + otp);
+
+        mailSender.send(message);
+
+        return "OTP sent successfully";
     }
 
-    @PostMapping("/send")
-    public String sendOtp(@RequestParam String mobile) {
-        return otpService.sendOtp(mobile);
-    }
+    public String verifyOtp(String email, String otp) {
+        String storedOtp = otpStorage.get(email);
 
-    @PostMapping("/verify")
-    public String verifyOtp(@RequestParam String otp) {
-        return otpService.verifyOtp(otp);
+        if (storedOtp != null && storedOtp.equals(otp)) {
+            otpStorage.remove(email);
+            return "OTP Verified Successfully";
+        }
+
+        return "Invalid OTP";
     }
 }
