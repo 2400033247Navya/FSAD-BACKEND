@@ -12,8 +12,8 @@ import java.util.Random;
 @Service
 public class OtpController {
 
-    @Autowired
-    private JavaMailSender mailSender;
+   // @Autowired
+    //private JavaMailSender mailSender;
 
     private Map<String, String> otpStorage = new HashMap<>();
 
@@ -27,7 +27,7 @@ public class OtpController {
         message.setSubject("SafeHaven OTP Verification");
         message.setText("Your OTP is: " + otp);
 
-        mailSender.send(message);
+      //  mailSender.send(message);
 
         return "OTP sent successfully";
     }
