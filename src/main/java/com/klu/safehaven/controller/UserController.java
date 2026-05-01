@@ -22,7 +22,11 @@ package com.klu.safehaven.controller;
 	    public User register(@RequestBody User user) {
 	        return userService.saveUser(user);
 	    }
+<<<<<<< HEAD
 	    
+=======
+
+>>>>>>> cd8e7c56fa4f36d2e181ce77dec831de6f65d8b8
 	    @GetMapping
 	    public List<User> getAllUsers() {
 	        return userService.getAllUsers();
