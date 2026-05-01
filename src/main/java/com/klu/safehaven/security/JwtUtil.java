@@ -1,58 +1,38 @@
+package com.klu.safehaven.security;
 
-	package com.klu.safehaven.security;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import java.security.Key;
+import java.util.Date;
 
-	import io.jsonwebtoken.Jwts;
-	import io.jsonwebtoken.security.Keys;
-	import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Component;
 
-	import javax.crypto.SecretKey;
-	import java.util.Date;
+@Component
+public class JwtUtil {
 
-	@Component
-	public class JwtUtil {
+    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
-	    private final String SECRET = "safehavenprojectsecretkeysafehavenprojectsecretkey";
-	    private final long EXPIRATION = 1000 * 60 * 60;
+    public String generateToken(String email) {
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
 
-	    private SecretKey getSigningKey() {
-	        return Keys.hmacShaKeyFor(SECRET.getBytes());
-	    }
+    public String extractEmail(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
+    }
 
-	    public String generateToken(String email, String role) {
-	        return Jwts.builder()
-	                .subject(email)
-	                .claim("role", role)
-	                .issuedAt(new Date())
-	                .expiration(new Date(System.currentTimeMillis() + EXPIRATION))
-	                .signWith(getSigningKey())
-	                .compact();
-	    }
-
-	    public String extractEmail(String token) {
-	        return Jwts.parser()
-	                .verifyWith(getSigningKey())
-	                .build()
-	                .parseSignedClaims(token)
-	                .getPayload()
-	                .getSubject();
-	    }
-
-	    public String extractRole(String token) {
-	        return Jwts.parser()
-	                .verifyWith(getSigningKey())
-	                .build()
-	                .parseSignedClaims(token)
-	                .getPayload()
-	                .get("role", String.class);
-	    }
-
-	    public boolean validateToken(String token) {
-	        try {
-	            extractEmail(token);
-	            return true;
-	        } catch (Exception e) {
-	            return false;
-	        }
-	    }
-	}
-
+    public boolean validateToken(String token, String email) {
+        String extractedEmail = extractEmail(token);
+        return extractedEmail.equals(email);
+    }
+}
